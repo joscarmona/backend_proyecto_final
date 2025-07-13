@@ -1,155 +1,150 @@
-const User = require('../models/User');
-const { generateToken } = require('../middleware/auth');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../connection.js';
 
-class AuthController {
-  // Registro de usuario
-  static async register(req, res) {
-    try {
-      const { name, email, phone, password, picture } = req.body;
+export const register = async (req, res) => {
+  try {
+    const { email, password, first_name, last_name, phone, address } = req.body;
 
-      // Verificar si el usuario ya existe
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
-        return res.status(409).json({
-          error: 'Usuario ya existe',
-          message: 'Ya existe un usuario registrado con este email'
-        });
-      }
-
-      // Crear nuevo usuario
-      const newUser = await User.create({
-        name,
-        email,
-        phone: phone || null,
-        password,
-        picture: picture || null
-      });
-
-      // Generar token
-      const token = generateToken(newUser.id);
-
-      res.status(201).json({
-        message: 'Usuario registrado exitosamente',
-        user: newUser,
-        token
-      });
-
-    } catch (error) {
-      console.error('Error en registro:', error);
-      res.status(500).json({
-        error: 'Error interno del servidor',
-        message: 'Error al registrar el usuario'
+    // Validar
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Email y contraseña son requeridos'
       });
     }
+
+   
+    const existingUser = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({
+        error: 'El usuario ya existe'
+      });
+    }
+
+ 
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    
+    const result = await pool.query(
+      `INSERT INTO users (email, password, first_name, last_name, phone, address) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING id, email, first_name, last_name, phone, address, created_at`,
+      [email, hashedPassword, first_name, last_name, phone, address]
+    );
+
+    const user = result.rows[0];
+
+    
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: 'Usuario registrado exitosamente',
+      data: {
+        user,
+        token
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en registro:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor'
+    });
   }
+};
 
-  // Login de usuario
-  static async login(req, res) {
-    try {
-      const { email, password } = req.body;
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-      // Buscar usuario por email
-      const user = await User.findByEmail(email);
-      if (!user) {
-        return res.status(401).json({
-          error: 'Credenciales inválidas',
-          message: 'Email o contraseña incorrectos'
-        });
-      }
+    // Validar 
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Email y contraseña son requeridos'
+      });
+    }
 
-      // Verificar contraseña
-      const isValidPassword = await User.verifyPassword(password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({
-          error: 'Credenciales inválidas',
-          message: 'Email o contraseña incorrectos'
-        });
-      }
+    // Buscar usuario
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
 
-      // Generar token
-      const token = generateToken(user.id);
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        error: 'Credenciales inválidas'
+      });
+    }
 
-      // Remover contraseña de la respuesta
-      const { password: _, ...userWithoutPassword } = user;
+    const user = result.rows[0];
 
-      res.json({
-        message: 'Login exitoso',
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      return res.status(401).json({
+        error: 'Credenciales inválidas'
+      });
+    }
+
+ 
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+  
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.json({
+      message: 'Login exitoso',
+      data: {
         user: userWithoutPassword,
         token
-      });
-
-    } catch (error) {
-      console.error('Error en login:', error);
-      res.status(500).json({
-        error: 'Error interno del servidor',
-        message: 'Error al iniciar sesión'
-      });
-    }
-  }
-
-  // Obtener perfil del usuario autenticado
-  static async getProfile(req, res) {
-    try {
-      // El usuario ya está disponible en req.user gracias al middleware de autenticación
-      res.json({
-        message: 'Perfil obtenido exitosamente',
-        user: req.user
-      });
-    } catch (error) {
-      console.error('Error al obtener perfil:', error);
-      res.status(500).json({
-        error: 'Error interno del servidor',
-        message: 'Error al obtener el perfil'
-      });
-    }
-  }
-
-  // Actualizar perfil del usuario autenticado
-  static async updateProfile(req, res) {
-    try {
-      const { name, email, phone, picture } = req.body;
-      const userId = req.user.id;
-
-      // Verificar si el nuevo email ya está en uso por otro usuario
-      if (email && email !== req.user.email) {
-        const existingUser = await User.findByEmail(email);
-        if (existingUser && existingUser.id !== userId) {
-          return res.status(409).json({
-            error: 'Email ya en uso',
-            message: 'Este email ya está registrado por otro usuario'
-          });
-        }
       }
+    });
 
-      // Actualizar usuario
-      const updatedUser = await User.update(userId, {
-        name: name || req.user.name,
-        email: email || req.user.email,
-        phone: phone || req.user.phone,
-        picture: picture || req.user.picture
-      });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor'
+    });
+  }
+};
 
-      if (!updatedUser) {
-        return res.status(404).json({
-          error: 'Usuario no encontrado',
-          message: 'No se pudo actualizar el perfil'
-        });
-      }
+export const getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
 
-      res.json({
-        message: 'Perfil actualizado exitosamente',
-        user: updatedUser
-      });
+    const result = await pool.query(
+      'SELECT id, email, first_name, last_name, phone, address, created_at FROM users WHERE id = $1',
+      [userId]
+    );
 
-    } catch (error) {
-      console.error('Error al actualizar perfil:', error);
-      res.status(500).json({
-        error: 'Error interno del servidor',
-        message: 'Error al actualizar el perfil'
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
       });
     }
+
+    res.json({
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error obteniendo usuario actual:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor'
+    });
   }
-}
-
-module.exports = AuthController;
-
+};
