@@ -32,5 +32,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   initializeDatabase();
 }
 
+// initializeDatabase()
+
 export default initializeDatabase;
 
