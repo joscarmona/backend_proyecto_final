@@ -1,6 +1,6 @@
 Proyecto Final
 
-Hito 2 - Desarrollo Frontend
+Hito 3 - Desarrollo Backend
 
 Integrantes:
 Joelis Jiménez,
