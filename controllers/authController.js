@@ -46,6 +46,10 @@ export const register = async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // const token = jwt.sign(
+    //   { id: user.id, email: user.email }, "az_AZ", { expiresIn: '24h' }
+    // );
+
     res.status(201).json({
       message: 'Usuario registrado exitosamente',
       data: {
