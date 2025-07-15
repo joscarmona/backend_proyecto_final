@@ -1,19 +1,27 @@
 {
-  "name": "backend_proyecto_final",
+  "name": "backend",
   "version": "1.0.0",
+  "description": "Backend marketplace",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "init-db": "node init-db.js"
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "postgresql",
+    "jwt",
+    "marketplace"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "jest": "^30.0.4",
     "jsonwebtoken": "^9.0.2",
