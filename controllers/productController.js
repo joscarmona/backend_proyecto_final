@@ -39,7 +39,7 @@ export const getProducts = async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    res.json({
+    res.status(200).json({
       data: result.rows,
       pagination: {
         limit: parseInt(limit),
