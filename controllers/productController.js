@@ -5,8 +5,11 @@ export const getProducts = async (req, res) => {
     const { category, search, user_id, limit = 50, offset = 0 } = req.query;
     
     let query = `
-      SELECT p.*, u.first_name, u.last_name, u.email as seller_email,
-             CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorite
+      SELECT 
+        p.*, 
+        u.first_name || ' ' || u.last_name AS vendedor,  
+        u.email AS email,                               
+        CASE WHEN f.id IS NOT NULL THEN true ELSE false END AS is_favorite
       FROM products p
       LEFT JOIN users u ON p.user_id = u.id
       LEFT JOIN favorites f ON p.id = f.product_id AND f.user_id = $1
@@ -62,8 +65,12 @@ export const getProduct = async (req, res) => {
     const userId = req.user?.id;
 
     const result = await pool.query(`
-      SELECT p.*, u.first_name, u.last_name, u.email as seller_email, u.phone as seller_phone,
-             CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorite
+     SELECT 
+        p.*, 
+        u.first_name || ' ' || u.last_name AS vendedor,  
+        u.email AS email,                                
+        u.phone AS seller_phone,
+        CASE WHEN f.id IS NOT NULL THEN true ELSE false END AS is_favorite
       FROM products p
       LEFT JOIN users u ON p.user_id = u.id
       LEFT JOIN favorites f ON p.id = f.product_id AND f.user_id = $1
