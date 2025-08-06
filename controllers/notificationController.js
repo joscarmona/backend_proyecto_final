@@ -48,8 +48,6 @@ export const createNotification = async (req, res) => {
     }
 
     const product = productExists.rows[0];
-    
-    console.log("Hola, debug interesado en el producto: ", product)
 
     const result = await pool.query(`
       INSERT INTO notifications (user_id, product_id, message)
