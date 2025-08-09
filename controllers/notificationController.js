@@ -41,6 +41,14 @@ export const createNotification = async (req, res) => {
       [product_id]
     );
 
+    /* ************************************************************** */
+    // Se trabaja en mostrar el nombre y correo electrónico del usuario que muestra interés por determinado producto
+    const userExists = await pool.query(
+      'SELECT id, user_id FROM users WHERE id = $1',
+      [userId]
+    );
+    /* ************************************************************** */
+
     if (productExists.rows.length === 0) {
       return res.status(404).json({
         error: 'Producto no encontrado'
