@@ -5,8 +5,10 @@ const { Pool } = pg;
 //   host: "localhost",
 //   user: "postgres",
 //   // password: "06272013",
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
+//   password: "Postgres4321@",
+//   // password: process.env.DB_PASSWORD,
+//   // database: process.env.DB_NAME,
+//   database: "marketplace",
 //   port: 5432,
 //   allowExitOnIdle: true,
 // });

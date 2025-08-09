@@ -44,7 +44,7 @@ export const createNotification = async (req, res) => {
     /* ************************************************************** */
     // Se trabaja en mostrar el nombre y correo electrónico del usuario que muestra interés por determinado producto
     const userExists = await pool.query(
-      'SELECT id, user_id FROM users WHERE id = $1',
+      'SELECT first_name, last_name, email FROM users WHERE id = $1',
       [userId]
     );
     /* ************************************************************** */
@@ -57,11 +57,21 @@ export const createNotification = async (req, res) => {
 
     const product = productExists.rows[0];
 
+    /* ************************************************************** */
+    if (userExists.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    const user = userExists.rows[0];
+    /* ************************************************************** */
+
     const result = await pool.query(`
-      INSERT INTO notifications (user_id, product_id, message)
-      VALUES ($1, $2, $3)
+      INSERT INTO notifications (user_id, product_id, message, interested_first_name, interested_last_name, interested_email)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
-    `, [product.user_id, product_id, message]);
+    `, [product.user_id, product_id, message, user.first_name, user.last_name, user.email]);
 
     res.status(201).json({
       message: 'Notificación creada exitosamente',
