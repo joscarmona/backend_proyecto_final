@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Marketplace Backend API
 
 Backend API REST para un marketplace de ropa desarrollado con Node.js, Express.js y PostgreSQL.
@@ -238,3 +239,13 @@ Este proyecto está bajo la Licencia ISC.
 
 Para reportar bugs o solicitar nuevas funcionalidades, por favor crear un issue en el repositorio del proyecto.
 
+=======
+Proyecto Final
+
+Hito 3 - Desarrollo Backend
+
+Integrantes:
+Joelis Jiménez,
+Elier Jaque,
+José Carmona
+>>>>>>> f944dd30ca64c3fb14a20b8466239266f8625f86
