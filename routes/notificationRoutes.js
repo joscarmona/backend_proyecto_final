@@ -13,8 +13,8 @@ const router = express.Router();
 // GET /api/notifications
 router.get('/', authenticateToken, getNotifications);
 
-// POST /api/notifications
-router.post('/notifications', authenticate, createNotification);
+// POST /api/notifications           // authenticate
+router.post('/notifications', createNotification);
 
 
 // PUT /api/notifications/:notificationId/read
