@@ -38,22 +38,30 @@ export const createNotification = async (req, res) => {
     const { product_id, message } = req.body;
     const userId = req.user.id;
 
+    console.log("MSG 1: ", userId, product_id, message)
+
     if (!product_id || !message) {
       return res.status(400).json({
         error: 'ID del producto y mensaje son requeridos'
       });
     }
 
+    console.log("MSG 2: ")
+
     const productExists = await pool.query(
       'SELECT id, user_id FROM products WHERE id = $1',
       [product_id]
     );
+
+    console.log("MSG 3: ")
 
     if (productExists.rows.length === 0) {
       return res.status(404).json({
         error: 'Producto no encontrado'
       });
     }
+
+    console.log("MSG 4: ")
 
     const product = productExists.rows[0];
 
@@ -62,11 +70,15 @@ export const createNotification = async (req, res) => {
       [userId]
     );
 
+    console.log("MSG 5: ")
+
     if (userExists.rows.length === 0) {
       return res.status(404).json({
         error: 'Usuario no encontrado'
       });
     }
+
+    console.log("MSG 6: ")
 
     const user = userExists.rows[0];
 
@@ -76,10 +88,14 @@ export const createNotification = async (req, res) => {
       RETURNING *
     `, [product.user_id, product_id, message, user.first_name, user.last_name, user.email]);
 
+    console.log("MSG 7: ")
+
     res.status(201).json({
       message: 'Notificación creada exitosamente',
       data: result.rows[0]
     });
+
+    console.log("MSG 8: ")
 
   } catch (error) {
     console.error('Error creando notificación:', error);
