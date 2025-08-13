@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/', authenticateToken, getNotifications);
 
 // POST /api/notifications           // authenticate
-router.post('/notifications', createNotification);
+router.post('/notifications', authenticate, createNotification);
 
 
 // PUT /api/notifications/:notificationId/read
